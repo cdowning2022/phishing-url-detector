@@ -22,11 +22,11 @@ can be extracted from a raw URL string at prediction time — see the
 
 | Metric | Test set |
 |---|---|
-| Accuracy | XX.XX% |
-| Precision | XX.XX% |
-| Recall | XX.XX% |
-| F1 score | XX.XX% |
-| ROC AUC | X.XXXX |
+| Accuracy | 99.50% |
+| Precision | 99.24% |
+| Recall | 99.89% |
+| F1 score | 99.56% |
+| ROC AUC | 0.9973 |
 
 Test set: ~47,000 held-out URLs, stratified 80/20 split, `random_state=42`.
 
@@ -181,6 +181,6 @@ designed for and should not be used in offensive security contexts.
 
 **Cole Downing** — Computer Science student at Florida Atlantic University,
 graduating August 2026. Currently seeking internships and entry-level roles
-in software engineering, ML, or cybersecurity.
+in software engineering, AI/ML, or cybersecurity.
 
 [GitHub](https://github.com/cdowning2022) · [LinkedIn](https://www.linkedin.com/in/cole-downing-991309218)
