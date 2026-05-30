@@ -4,6 +4,7 @@ CLI tool for classifying a URL as phishing or legitimate.
 Usage:
     python -m src.predict predict https://example.com
     python -m src.predict predict https://suspicious.example --verbose
+    python -m src.predict predict-batch urls.txt
     python -m src.predict info
 """
  
@@ -164,6 +165,58 @@ def info(
             typer.echo(f"  {k:<10} {v:.4f}")
  
  
+@app.command("predict-batch")
+def predict_batch(
+    input_file: Path = typer.Argument(..., help="Text file with one URL per line"),
+    output_file: Path = typer.Option(None, "--output", "-o", help="Save results as CSV to this path"),
+    model_path: Path = typer.Option(DEFAULT_MODEL_PATH, "--model", "-m"),
+):
+    """Classify a batch of URLs from a file (one URL per line)."""
+    if not input_file.exists():
+        typer.echo(red(f"Input file not found: {input_file}"))
+        raise typer.Exit(code=1)
+ 
+    bundle = load_model(model_path)
+    model = bundle["model"]
+    scaler = bundle.get("scaler")
+    feature_names = bundle["feature_names"]
+ 
+    urls = [line.strip() for line in input_file.read_text().splitlines() if line.strip()]
+    typer.echo(f"Classifying {len(urls)} URLs from {input_file.name}...\n")
+ 
+    rows = []
+    for url in urls:
+        try:
+            values, _ = features_for_model(url, feature_names)
+            X = pd.DataFrame([values], columns=feature_names)
+            if scaler is not None:
+                X = scaler.transform(X)
+            pred = int(model.predict(X)[0])
+            proba = model.predict_proba(X)[0]
+            label = "PHISHING" if pred == 0 else "LEGITIMATE"
+            confidence = float(proba[0]) if pred == 0 else float(proba[1])
+        except Exception as e:
+            label = "ERROR"
+            confidence = 0.0
+            typer.echo(dim(f"  Error on {url}: {e}"))
+ 
+        rows.append({"url": url, "prediction": label, "confidence": round(confidence, 4)})
+ 
+        # Print a concise summary line
+        color = red if label == "PHISHING" else green if label == "LEGITIMATE" else yellow
+        typer.echo(f"  {color(label):<25} ({confidence:.1%})  {url}")
+ 
+    if output_file:
+        pd.DataFrame(rows).to_csv(output_file, index=False)
+        typer.echo(f"\nSaved results to {output_file}")
+ 
+    # Summary
+    n_phish  = sum(1 for r in rows if r["prediction"] == "PHISHING")
+    n_legit  = sum(1 for r in rows if r["prediction"] == "LEGITIMATE")
+    n_errors = sum(1 for r in rows if r["prediction"] == "ERROR")
+    typer.echo("")
+    typer.echo(bold(f"Summary: ") + f"{n_phish} phishing, {n_legit} legitimate, {n_errors} errors")
+ 
+ 
 if __name__ == "__main__":
     app()
- 

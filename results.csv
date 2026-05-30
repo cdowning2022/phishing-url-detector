@@ -1,0 +1,5 @@
+url,prediction,confidence
+https://github.com,LEGITIMATE,0.9966
+https://google.com,LEGITIMATE,0.9966
+http://192.168.1.1/login,PHISHING,1.0
+http://paypal.verify-suspicious.tk/account?id=12345,PHISHING,1.0
